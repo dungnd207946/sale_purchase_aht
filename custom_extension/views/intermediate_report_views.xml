@@ -1,0 +1,56 @@
+<odoo>
+    <data>
+<!--        <record id="view_intermediate_report_tree" model="ir.ui.view">-->
+<!--            <field name="name">intermediate.report.tree</field>-->
+<!--            <field name="model">intermediate.report</field>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <tree edit="true">-->
+<!--                    <field name="company_id" />-->
+<!--                    <field name="location_id" />-->
+<!--                    <field name="begin_date" />-->
+<!--                    <field name="last_date" />-->
+<!--                </tree>-->
+<!--            </field>-->
+<!--        </record>-->
+
+        <!-- Form view for Intermediate Report -->
+        <record id="view_intermediate_report_form" model="ir.ui.view">
+            <field name="name">intermediate.report.form</field>
+            <field name="model">intermediate.report</field>
+            <field name="arch" type="xml">
+                <form>
+                    <!-- Header -->
+                    <header>
+                        <button name="show_report" type="object" string="Show Report" class="btn-primary" />
+                    </header>
+
+                    <!-- Body -->
+
+                    <group>
+                        <field name="company_id" />
+                        <field name="location_id" required="1"/>
+                        <field name="begin_date" />
+                        <field name="last_date" />
+                    </group>
+                </form>
+            </field>
+        </record>
+
+
+        <!-- Action  -->
+        <record id="action_intermediate_report" model="ir.actions.act_window">
+            <field name="name">I/O Report</field>
+            <field name="res_model">intermediate.report</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu item  -->
+        <menuitem
+            id="menu_intermediate_report"
+            name="I/O Report"
+            action="action_intermediate_report"
+            parent="stock.menu_warehouse_report"/>
+
+    </data>
+</odoo>
