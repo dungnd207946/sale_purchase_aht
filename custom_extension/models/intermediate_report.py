@@ -27,7 +27,7 @@ class IntermediateReport(models.Model):
                 'product_id': product.id,
             })
 
-            # Tự động gọi các hàm compute cho từng dòng báo cáo mới tạo
+        # Tính toán dữ liệu nhập xuất trước/trong/sau kì
         i = 0
         data = []
         for line in self.report_line_ids:

@@ -19,11 +19,6 @@
             <field name="model">intermediate.report</field>
             <field name="arch" type="xml">
                 <form>
-                    <!-- Header -->
-                    <header>
-                        <button name="show_report" type="object" string="Show Report" class="btn-primary" />
-                    </header>
-
                     <!-- Body -->
 
                     <group>
@@ -32,6 +27,8 @@
                         <field name="begin_date" />
                         <field name="last_date" />
                     </group>
+
+                    <button name="show_report" type="object" string="Show Report" class="btn-secondary" />
                 </form>
             </field>
         </record>
