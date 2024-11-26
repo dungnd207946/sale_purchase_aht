@@ -4,7 +4,7 @@ from datetime import timedelta
 import xlsxwriter
 from odoo import models, fields, api
 from odoo.http import request
-class IntermediateReport(models.Model):
+class IntermediateReport(models.TransientModel):
     _name = 'intermediate.report'
     _description = 'Intermediate Location Report'
 
@@ -15,40 +15,125 @@ class IntermediateReport(models.Model):
     location_id = fields.Many2one('stock.location', 'Location')
     last_date = fields.Datetime('End Date', default=fields.Datetime.now, required=True)
     begin_date = fields.Datetime('Begin Date', default=lambda self: fields.Datetime.now() - timedelta(days=7), required=True)
-    report_line_ids = fields.One2many('intermediate.report.line', 'report_id')
 
-    def show_report(self):
-        products = self.env['product.product'].search([])  # Tìm tất cả sản phẩm
-
-        # Tạo dòng báo cáo cho mỗi sản phẩm
-        for product in products:
-            line = self.env['intermediate.report.line'].create({
-                'report_id': self.id,
-                'product_id': product.id,
-            })
-
-        # Tính toán dữ liệu nhập xuất trước/trong/sau kì
-        i = 0
+    def compute_line(self):
+        products = self.env['product.product'].search([])
         data = []
-        for line in self.report_line_ids:
-            # line._compute_last_available_qty()
-            # line._compute_last_available_val()
-            #
-            # line._compute_incoming_inter_qty()
-            # line._compute_incoming_inter_val()
-            #
-            # line._compute_outgoing_inter_qty()
-            # line._compute_outgoing_inter_val()
-            #
-            # line._compute_begin_available_qty()
-            # line._compute_begin_available_val()
+        i = 0
+        for product in products:
+            last_available_qty = self.compute_last_available_qty(product)
+            last_available_val = self.compute_last_available_val(product, last_available_qty)
+            incoming_inter_qty = self.compute_incoming_inter_qty(product)
+            incoming_inter_val = self.compute_incoming_inter_val(product, incoming_inter_qty)
+            outgoing_inter_qty = self.compute_outgoing_inter_qty(product)
+            outgoing_inter_val = self.compute_outgoing_inter_val(product, outgoing_inter_qty)
+            begin_available_qty = last_available_qty - incoming_inter_qty + outgoing_inter_qty
+            begin_available_val = last_available_val - incoming_inter_val + outgoing_inter_val
 
             i += 1
             data.append(
-                [i, line.product_id.default_code, line.product_id.name, line.product_id.categ_id.complete_name, 'Cái',
-                 line.begin_available_qty, line.begin_available_val, line.incoming_inter_qty, line.incoming_inter_val,
-                 line.outgoing_inter_qty, line.outgoing_inter_val, line.last_available_qty, line.last_available_val]
+                [i, product.default_code, product.name, product.categ_id.complete_name, 'Cái',
+                 begin_available_qty, begin_available_val, incoming_inter_qty, incoming_inter_val,
+                 outgoing_inter_qty, outgoing_inter_val, last_available_qty, last_available_val]
             )
+        return data
+    def compute_last_available_qty(self, product):
+        current_qty = self.env['stock.quant'].search(
+            [('location_id', '=', self.location_id.id), ('product_id', '=', product.id)],
+            limit=1).quantity
+        incoming_qty = self.env['stock.move.line'].read_group(
+            [
+                ('location_dest_id', '=', self.location_id.id),
+                ('product_id', '=', product.id),
+                ('date', '>=', self.last_date),  # Tính từ last_date -> hiện tại
+                ('date', '<=', fields.Datetime.now()),
+                ('state', '=', 'done')
+            ],
+            ['product_id', 'quantity:sum'],
+            ['product_id']
+        )
+
+        outgoing_qty = self.env['stock.move.line'].read_group(
+            [
+                ('location_id', '=', self.location_id.id),
+                ('product_id', '=', product.id),
+                ('date', '>=', self.last_date),  # Tính từ last_date -> hiện tại
+                ('date', '<=', fields.Datetime.now()),
+                ('state', '=', 'done')
+            ],
+            ['product_id', 'quantity:sum'],
+            ['product_id']
+        )
+
+        if incoming_qty:
+            in_qty = incoming_qty[0]['quantity']
+        else:
+            in_qty = 0
+        if outgoing_qty:
+            out_qty = outgoing_qty[0]['quantity']
+        else:
+            out_qty = 0
+        last_available_qty = current_qty - in_qty + out_qty
+        return last_available_qty
+
+    def compute_last_available_val(self, product, last_available_qty):
+        last_available_val = last_available_qty * product.lst_price
+        return last_available_val
+
+    def compute_incoming_inter_qty(self, product):
+        incoming_qty = self.env['stock.move.line'].read_group(
+            [
+                ('location_dest_id', '=', self.location_id.id),
+                ('product_id', '=', product.id),
+                ('location_usage', 'not in', ['internal', 'transit']),
+                ('location_dest_usage', 'in', ['internal', 'transit']),
+                ('date', '>=', self.begin_date),  # Tính từ begin_date -> last_date
+                ('date', '<=', self.last_date),
+                ('state', '=', 'done')
+            ],
+            ['product_id', 'quantity:sum'],
+            ['product_id']
+        )
+
+        if incoming_qty:
+            return incoming_qty[0]['quantity']
+        else:
+            return 0
+
+    def compute_incoming_inter_val(self, product, incoming_inter_qty):
+        incoming_inter_val = incoming_inter_qty * product.lst_price
+        return incoming_inter_val
+
+    def compute_outgoing_inter_qty(self, product):
+        outgoing_qty = self.env['stock.move.line'].read_group(
+            [
+                ('location_id', '=', self.location_id.id),
+                ('product_id', '=', product.id),
+                ('location_usage', 'in', ['internal', 'transit']),
+                ('location_dest_usage', 'not in', ['internal', 'transit']),
+                ('date', '>=', self.begin_date),  # Tính từ begin_date -> last_date
+                ('date', '<=', self.last_date),
+                ('state', '=', 'done')
+            ],
+            ['product_id', 'quantity:sum'],
+            ['product_id']
+        )
+
+        if outgoing_qty:
+            return outgoing_qty[0]['quantity']
+        else:
+            return 0
+
+    def compute_outgoing_inter_val(self, product, outgoing_inter_qty):
+        outgoing_inter_val = outgoing_inter_qty * product.lst_price
+        return outgoing_inter_val
+
+
+    def show_report(self):
+        # Tính toán dữ liệu nhập xuất trước/trong/sau kì
+        data = self.compute_line()
+
+        # Tạo file excel
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         worksheet = workbook.add_worksheet('Report Sheet')
@@ -58,7 +143,8 @@ class IntermediateReport(models.Model):
         header_format = workbook.add_format({'font_name': 'Times New Roman',
                                              'bold': True,
                                              'font_size': 12,
-                                             'border': 1})
+                                             'border': 1,
+                                             'valign': 'vcenter'})
         table_format = workbook.add_format({'font_name': 'Times New Roman',
                                             'font_size': 10,
                                             'border': 1})
@@ -100,11 +186,12 @@ class IntermediateReport(models.Model):
         worksheet.write('L9', '(7)=(1)+(3)-(5)', header_format)
         worksheet.write('M9', '(8)=(2)+4-(6)', header_format)
         worksheet.write('A10', str(self.location_id.complete_name), header_format)
-        # Tính tổng ở dòng 10 -------------------------------- ?
+
         row = 10
         for line in data:
             worksheet.write_row(row, 0, line, table_format)
             row += 1
+        # Tính tổng ở dòng 10 --------------------------------
         worksheet.write_formula(9, 5, f'=SUM(F11:F{row})', sum_format)
         worksheet.write_formula(9, 6, f'=SUM(G11:G{row})', sum_format)
         worksheet.write_formula(9, 7, f'=SUM(H11:H{row})', sum_format)
