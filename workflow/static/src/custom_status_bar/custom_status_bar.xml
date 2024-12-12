@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
     <t t-name="workflow.CustomStatusBar">
         <div class="o_form_statusbar position-relative d-flex justify-content-between mb-0 mb-md-2 pb-2 pb-md-0">
-            <div class="o_statusbar_buttons d-flex align-items-center align-content-around flex-wrap gap-1 custom_statusbar_buttons">
+            <div t-if="states.length > 0" class="o_statusbar_buttons d-flex align-items-center align-content-around flex-wrap gap-1 custom_statusbar_buttons">
                 <button class="btn btn-primary" t-on-click="approve_state">Approve</button>
                 <button class="btn btn-secondary" t-on-click="cancel_state">Cancel</button>
             </div>
