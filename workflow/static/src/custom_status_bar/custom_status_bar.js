@@ -7,9 +7,6 @@ export class CustomStatusBar extends Component {
     static template = "workflow.CustomStatusBar"
     setup(){
         this.states = useState([
-            // {"value": "state1-1", "label": "State 1-1", isSelected: true, item_first: false, item_last: false},
-            // {"value": "state2", "label": "State 2", isSelected: true, item_first: false, item_last: false},
-            // {"value": "state3", "label": "State 3", isSelected: false, item_first: false, item_last: true},
         ]);
         this.orm = useService('orm');
         this.getStates();
@@ -31,7 +28,6 @@ export class CustomStatusBar extends Component {
         console.log(record_state)
         if (model_state) {
             const stateArray = Object.values(model_state);  // Chuyển đổi đối tượng thành mảng
-            console.log(stateArray)
             // Cập nhật dữ liệu vào this.states
             const newStates = [];
             stateArray.forEach((item, index, array) => {
@@ -55,40 +51,44 @@ export class CustomStatusBar extends Component {
         const res_model = await this.env.model.root.resModel;
 
         let previousState = null;
-        this.states.forEach((state, index) => {
+        for (const [index, state] of this.states.entries()) {
             if (state.isSelected && index > 0) {
-                state.isSelected = false;
                 if (previousState) {
+                    await this.orm.call('state.record', 'update_state', [res_id, res_model, previousState.value]);
                     previousState.isSelected = true;
-                    this.orm.call('state.record', 'update_state', [res_id, res_model, previousState.value]);
+                    state.isSelected = false;
                 }
             }
             previousState = state;
-        })
+        }
     }
 
     async cancel_state() {
-        console.log("Cancel");
+        console.log("Cancel button");
         const res_id = await this.env.model.root.resId;
         const res_model = await this.env.model.root.resModel;
 
         let nextState = false;
-        for (let index = 0; index < this.states.length; index++) {
-            let state = this.states[index];
+        let previousState = null;
+
+        for (const state of this.states) {
             if (nextState) {
+                await this.orm.call('state.record', 'update_state', [res_id, res_model, state.value]);
+                previousState.isSelected = false;
                 state.isSelected = true;
-                this.orm.call('state.record', 'update_state', [res_id, res_model, state.value]);
+                console.log("Call break ")
                 break;
             }
-            if (index === this.states.length - 1) {
+            if (state === this.states[this.states.length - 1]) {
                 break;
             }
             if (state.isSelected && nextState === false) {
-                state.isSelected = false;
                 nextState = true;
             }
+            previousState = state
         }
     }
+
     async create_state_for_new_record() {
         console.log("Create state for new record");
         const res_id = await this.env.model.root.resId;
@@ -100,7 +100,7 @@ export class CustomStatusBar extends Component {
             return; // Không có workflow, thoát ra
         }
 
-        // Đã có res ID rồi thì sao mà lại không tồn tại :)))
+        // Đã có res ID rồi nhưng không tồn tại record
         const existingState = await this.orm.searchRead('state.record', [
                 ['model_id.model', '=', res_model],
                 ['record_id', '=', res_id]
