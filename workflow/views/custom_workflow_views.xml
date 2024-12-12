@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_custom_workflow_form" model="ir.ui.view">
+            <field name="name">custom.workflow.form</field>
+            <field name="model">custom.workflow</field>
+            <field name="arch" type="xml">
+                <form string="Custom Workflow">
+                    <header>
+                        <h4>Model Workflow</h4>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="model_id"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="companies_id" widget="many2many_tags"/>
+                        </group>
+                        <notebook>
+                            <page string="States">
+                                <field name="custom_state" widget="one2many_list">
+                                    <tree editable="bottom">
+                                        <field name="state"/>
+                                        <field name="priority" widget="integer"/>
+                                        <field name="approve_user" widget="many2many_tags"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_custom_workflow_tree" model="ir.ui.view">
+            <field name="name">custom.workflow.tree</field>
+            <field name="model">custom.workflow</field>
+            <field name="arch" type="xml">
+                <tree string="WorkFlows">
+                    <field name="name"/>
+                    <field name="model_id"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="companies_id" widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_custom_workflow" model="ir.actions.act_window">
+            <field name="name">Custom Workflow</field>
+            <field name="res_model">custom.workflow</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <menuitem id="menu_custom_workflow"
+            name="Workflow"
+            action="action_custom_workflow"
+            sequence="5"/>
+    </data>
+</odoo>

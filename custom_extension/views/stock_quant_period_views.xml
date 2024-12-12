@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--    Đây là action mở view Dữ liệu tồn theo thời gian-->
+    <record id="action_stock_quant_period_open" model="ir.actions.act_window">
+        <field name="name">Period Quantity</field>
+        <field name="res_model">stock.quant.period</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('location_id', 'child_of', active_ids)]</field>
+    </record>
+
+<!--    Đây là view (sẽ được mở bởi action)-->
+    <record id="view_stock_quant_period_tree" model="ir.ui.view">
+        <field name="name">stock.quant.period.tree</field>
+        <field name="model">stock.quant.period</field>
+        <field name="arch" type="xml">
+            <tree string="Stock Quant Period">
+                <field name="period_time" string="Period"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_stock_quant_period_form" model="ir.ui.view">
+        <field name="name">stock.quant.period.form</field>
+        <field name="model">stock.quant.period</field>
+        <field name="arch" type="xml">
+            <form string="Period Stock Quantity" readonly="1" >
+            <sheet class="period-form">
+                <group>
+                    <field name="period_time" readonly="1"/>
+                    <field name="location_id" readonly="1"/>
+                </group>
+
+                <notebook>
+                    <page string="Product Quantity Period">
+                        <field name="quant_period_line_ids" readonly="1">
+                            <tree>
+                                <field name="product_id" readonly="1"/>
+                                <field name="quantity" readonly="1"/>
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+        </field>
+    </record>
+
+
+
+<!--    Button sẽ gọi đến action-->
+    <record id="custom_view_location_form" model="ir.ui.view">
+        <field name="name">custom.stock.location.form</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='%(stock.location_open_quants)d']" position="after">
+                    <button string="Period Stock"
+                            name="%(action_stock_quant_period_open)d"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-cogs"
+                    />
+                </xpath>
+        </field>
+    </record>
+
+    <record id="ir_cron_create_period_record" model="ir.cron">
+        <field name="name">Create Stock Quant Period Record</field>
+        <field name="model_id" ref="custom_extension.model_stock_quant_period"/>
+        <field name="state">code</field>
+        <field name="code">model.create_period_record()</field>
+        <field name="interval_number">30</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">10</field>
+        <field name="active">True</field>
+    </record>
+
+</odoo>

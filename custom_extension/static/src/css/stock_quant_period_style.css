@@ -1,0 +1,12 @@
+.period-form {
+    width: 70%;
+    font-size: 16px;
+}
+
+.custom-period-form .o_list_view tbody tr:nth-child(odd) {
+    background-color: #7f6262;
+}
+
+.custom-period-form .o_list_view tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}

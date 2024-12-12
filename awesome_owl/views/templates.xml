@@ -1,0 +1,17 @@
+<odoo>
+    <data>
+          <template id="awesome_owl.playground" name="Awesome T-Shirt thank you">
+            <html>
+                <head>
+                    <link type="image/x-icon" rel="shortcut icon" href="/web/static/img/favicon.ico"/>
+                    <t t-call-assets="awesome_owl.assets_playground"/>
+<!--                    Dòng trên tương đương với việc gọi scripts, css trong html-->
+                </head>
+                <body>
+                    Hello World 1!
+                    <div id="custom_component">111 </div>
+                </body>
+            </html>
+          </template>
+    </data>
+</odoo>

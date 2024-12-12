@@ -8,7 +8,6 @@
             <field name="arch" type="xml">
                 <form>
                     <!-- Body -->
-
                     <group>
                         <field name="company_id" readonly="1"/>
                         <field name="location_id" required="1"/>

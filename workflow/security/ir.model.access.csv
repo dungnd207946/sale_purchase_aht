@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_custom_workflow,custom.workflow,model_custom_workflow,base.group_user,1,1,1,1
+access_custom_workflow_state,custom.workflow.state,model_custom_workflow_state,base.group_user,1,1,1,1
+access_state_record,state.record,model_state_record,base.group_user,1,1,1,1
