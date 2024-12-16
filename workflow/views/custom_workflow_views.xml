@@ -21,7 +21,7 @@
                             <page string="States">
                                 <field name="custom_state" widget="one2many_list">
                                     <tree editable="bottom">
-                                        <field name="state"/>
+                                        <field name="state" domain="[('model_id', '=', parent.model_id)]"/>
                                         <field name="priority" widget="integer"/>
                                         <field name="approve_user" widget="many2many_tags"/>
                                     </tree>

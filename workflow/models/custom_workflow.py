@@ -21,13 +21,14 @@ class CustomWorkflow(models.Model):
             state_records = self.env['custom.workflow.state'].search([('workflow_id', '=', workflow.id)])
             sorted_states = sorted(state_records, key=lambda s: s.priority, reverse=True)
             states = {
-                s.state: {
-                    "value": s.state,
-                    "label": s.state,
+                s.state.name: {
+                    "value": s.state.name,
+                    "label": s.state.name,
                     "priority": s.priority
                 }
                 for s in sorted_states
             }
+            print(states)
             return states
 
 
@@ -38,15 +39,44 @@ class CustomWorkflow(models.Model):
         model_records = self.env[record.model_id.model].search([])
 
         for m in model_records:
-            state_value = record.custom_state[0].state if record.custom_state else ''
+            state_value = record.custom_state[0].state.name if record.custom_state else ''
             self.env['state.record'].create({
                 'workflow_id': record.id,
                 'model_id': record.model_id.id,
                 'record_id': int(m.id),
                 'state': state_value
             })
-
         return record
 
+    @api.model
+    def write(self, vals):
+        if 'model_id' in vals:
+            for record in self:
+                old_record_states = self.env['state.record'].search([('model_id', '=', record.model_id.id)])
+                old_record_states.unlink()
+            result = super(CustomWorkflow, self).write(vals)
+            for record in self:
+                model_records = self.env[record.model_id.model].search([])
+                for m in model_records:
+                    state_value = record.custom_state[0].state.name if record.custom_state else ''
+                    self.env['state.record'].create({
+                        'workflow_id': record.id,
+                        'model_id': record.model_id.id,
+                        'record_id': int(m.id),
+                        'state': state_value
+                    })
+
+        return super(CustomWorkflow, self).write(vals)
+
+    # Check xe model hiện tại đã có trường state chưa
+    @api.model
+    def check_state_model(self, model_name):
+        print("Call check exist state")
+        model = self.env[model_name]
+        fields_info = model.fields_get(allfields=['state'])
+        if 'state' in fields_info:
+            return True
+        else:
+            return False
 
 

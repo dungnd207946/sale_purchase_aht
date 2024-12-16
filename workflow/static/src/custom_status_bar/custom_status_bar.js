@@ -2,17 +2,15 @@
 import { Component, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-
 export class CustomStatusBar extends Component {
     static template = "workflow.CustomStatusBar"
     setup(){
-        this.states = useState([
-        ]);
+        this.states = useState([ ]);
+        this.exist_state = useState({value: false})
         this.orm = useService('orm');
         this.getStates();
         this.create_state_for_new_record()
     }
-
 
     async getStates(){
         console.log("Call get state")
@@ -20,12 +18,13 @@ export class CustomStatusBar extends Component {
         const res_id = await this.env.model.root.resId;
         const model = String(res_model)
 
+        const check_state_exist = await this.orm.call('custom.workflow', 'check_state_model', [model])
+        // Nếu tồn tại trường state, gắn value = false
+        this.exist_state.value = !check_state_exist;
         // Tất cả state của model
         const model_state = await this.orm.call('custom.workflow', 'get_states_by_model', [model]);
-        console.log(model_state)
         // State hiện tại của bản ghi
         const record_state = await this.orm.call('state.record', 'get_state_by_resID', [res_id, model]);
-        console.log(record_state)
         if (model_state) {
             const stateArray = Object.values(model_state);  // Chuyển đổi đối tượng thành mảng
             // Cập nhật dữ liệu vào this.states
@@ -100,7 +99,7 @@ export class CustomStatusBar extends Component {
             return; // Không có workflow, thoát ra
         }
 
-        // Đã có res ID rồi nhưng không tồn tại record
+        // Đã có res ID rồi nhưng không tồn tại state record
         const existingState = await this.orm.searchRead('state.record', [
                 ['model_id.model', '=', res_model],
                 ['record_id', '=', res_id]

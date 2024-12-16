@@ -4,8 +4,8 @@ class StateRecord(models.Model):
     _name = 'state.record'
     _description = 'State Record'
     workflow_id = fields.Many2one('custom.workflow', string='Workflow', ondelete='cascade')
-    model_id = fields.Many2one('ir.model', string='Model')
-    record_id = fields.Integer(string='Record in Model')
+    model_id = fields.Many2one('ir.model', string='Model', ondelete='cascade')
+    record_id = fields.Integer(string='Record in Model', ondelete='cascade')
     state = fields.Char(string='Current state')
 
     @api.model
@@ -19,9 +19,9 @@ class StateRecord(models.Model):
         resID = int(resID)
         record = self.search([('model_id.model', '=', model), ('record_id', '=', resID)], limit=1)
         if record:
-            # Check model để giới hạn số bản ghi state.record tạo ra
-            models_to_check = ['state.record']
-            if model not in models_to_check:
+            # Giới hạn model bị check chỉ có trong workflow
+            models_to_check = self.env['custom.workflow'].search([]).mapped('model_id.model')
+            if model in models_to_check:
                 # Lấy workflow của model chứa bản ghi này
                 workflow = self.env['custom.workflow'].search([
                     ('model_id.model', '=', model),
@@ -39,23 +39,10 @@ class StateRecord(models.Model):
         else:
             print("Update state fail")
 
-    @api.model
-    def new_state_for_new_record(self, model, record_id):
-        model_id = self.env['ir.model'].search([('model', '=', model)], limit=1)
-        workflow_id = self.env['custom.workflow'].search([('model_id', '=', model_id.id)], limit=1)
-        if workflow_id:
-            state_value = workflow_id.custom_state[0].state if workflow_id.custom_state else ''
-            self.create({
-                'workflow_id': workflow_id.id,
-                'model_id': model_id.id,
-                'record_id': int(record_id),
-                'state': state_value
-            })
-
     def _is_state_valid(self, state, workflow):
         print("Call valid state")
         workflow_state = self.env['custom.workflow.state'].search([('workflow_id', '=', workflow.id),
-                                                                   ('state', '=', state)
+                                                                   ('state.name', '=', state)
                                                                    ], limit=1)
 
         if not workflow_state:
@@ -65,3 +52,16 @@ class StateRecord(models.Model):
         if user_groups & state_groups:  # Kiểm tra giao nhau của 2 danh sách nhóm
             return True
         return False
+
+    @api.model
+    def new_state_for_new_record(self, model, record_id):
+        model_id = self.env['ir.model'].search([('model', '=', model)], limit=1)
+        workflow_id = self.env['custom.workflow'].search([('model_id', '=', model_id.id)], limit=1)
+        if workflow_id:
+            state_value = workflow_id.custom_state[0].state.name if workflow_id.custom_state else ''
+            self.create({
+                'workflow_id': workflow_id.id,
+                'model_id': model_id.id,
+                'record_id': int(record_id),
+                'state': state_value
+            })

@@ -1,9 +1,0 @@
-<templates>
-    <t t-name="custom_owl_module.TemplateOwlExample">
-        <div class="owl-example">
-            <h1>Hello Owl!</h1>
-            <p>Counter: <t t-esc="state.counter"/></p>
-            <button t-on-click="increment">Click Me</button>
-        </div>
-    </t>
-</templates>

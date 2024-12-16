@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="workflow.CustomStatusBar">
-        <div class="o_form_statusbar position-relative d-flex justify-content-between mb-0 mb-md-2 pb-2 pb-md-0">
+        <div t-if="exist_state.value" class="o_form_statusbar position-relative d-flex justify-content-between mb-0 mb-md-2 pb-2 pb-md-0">
             <div t-if="states.length > 0" class="o_statusbar_buttons d-flex align-items-center align-content-around flex-wrap gap-1 custom_statusbar_buttons">
                 <button class="btn btn-primary" t-on-click="approve_state">Approve</button>
                 <button class="btn btn-secondary" t-on-click="cancel_state">Cancel</button>
             </div>
             <div name="custom_state" class="o_field_widget o_readonly_modifier o_field_statusbar">
                  <div class="o_statusbar_status custom_statusbar" role="radiogroup">
-<!--                     <button type="button" class="btn btn-secondary o_arrow_button o_first" role="radio" disabled="" aria-label="Current state" aria-checked="true" data-value="sent">Finish</button>-->
-<!--                     <button type="button" class="btn btn-secondary o_arrow_button " role="radio" disabled="" aria-label="Current state" aria-checked="true" data-value="sent">Processing</button>-->
-<!--                     <button type="button" class="btn btn-secondary o_arrow_button o_last o_arrow_button_current" role="radio" disabled="" aria-label="Not activate state" aria-checked="false" aria-current="step" data-value="sale">Start</button>-->
-
                      <t t-foreach="states" t-as="item" t-key="item.value">
                          <button
                              type="button"

@@ -5,9 +5,9 @@ class CustomBaseModel(models.AbstractModel):
 
     def write(self, vals):
         print("Call in custom Base")
-        # Vì trong state.record có trường state, trùng tên với state của các trường khác
-        models_not_to_checks = ['state.record']
-        if self._name not in models_not_to_checks and 'state' in vals:
+        # Giới hạn model bị check chỉ có trong workflow
+        models_to_check = self.env['custom.workflow'].search([]).mapped('model_id.model')
+        if self._name in models_to_check and 'state' in vals:
             # Kiểm tra điều kiện state
             for record in self:
                 current_model = record._name
@@ -29,7 +29,7 @@ class CustomBaseModel(models.AbstractModel):
     def is_state_valid(self, state, workflow):
         print("Call valid state")
         workflow_state = self.env['custom.workflow.state'].search([('workflow_id', '=', workflow.id),
-                                                                   ('state', '=', state)
+                                                                   ('state.name', '=', state)
                                                                    ], limit=1)
 
         if not workflow_state:

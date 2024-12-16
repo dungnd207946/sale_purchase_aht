@@ -1,0 +1,31 @@
+<odoo>
+    <record id="view_student_search_wizard" model="ir.ui.view">
+        <field name="name">student.search.wizard.form</field>
+        <field name="model">student.search.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Search Students">
+                <group>
+                    <field name="keyword" placeholder="Enter code"/>
+                    <button name="action_search" type="object" string="Search" class="btn-primary"/>
+                </group>
+                <separator string="Search Results" colspan="4"/>
+                <field name="result_ids" nolabel="1">
+                    <tree>
+                        <field name="code"/>
+                        <field name="name"/>
+                    </tree>
+                </field>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action để mở wizard -->
+    <record id="action_student_search_wizard" model="ir.actions.act_window">
+        <field name="name">Search Students</field>
+        <field name="res_model">student.search.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+
+</odoo>
