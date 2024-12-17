@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_state_in_model_tree" model="ir.ui.view">
+        <field name="name">state.in.model.tree</field>
+        <field name="model">state.in.model</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="model_id"/>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_state_in_model_form" model="ir.ui.view">
+        <field name="name">state.in.model.form</field>
+        <field name="model">state.in.model</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="model_id"/>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+     <!-- Search View -->
+    <record id="view_state_in_model_search" model="ir.ui.view">
+        <field name="name">state.in.model.search</field>
+        <field name="model">state.in.model</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="State Name"/>
+                <field name="model_id" string="Model"/>
+
+                <!-- Add default group by -->
+                <group expand="1" string="Group By">
+                    <filter string="Model" name="group_by_model" context="{'group_by': 'model_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <!-- Action -->
+    <record id="action_state_in_model" model="ir.actions.act_window">
+        <field name="name">State in Model</field>
+        <field name="res_model">state.in.model</field>
+        <field name="view_mode">tree,form</field>
+<!--        <field name="search_view_id" ref="view_state_in_model_search"/>-->
+        <field name="context">{'search_default_group_by_model': 1}</field>
+        <field name="help" type="html">
+            <p>
+                Manage the states of models here.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_state_in_model"
+              name="State in Model"
+              parent="menu_custom_workflow"
+              action="action_state_in_model"/>
+</odoo>
